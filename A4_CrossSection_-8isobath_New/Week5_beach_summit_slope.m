@@ -1,14 +1,9 @@
 %% Description
-% The code is for a CEE 199 assignment, this code is as same as
-% Week5_profileplotting before the part "Find the maximum beach elevation
-% and calculate the beach slope"
 
-% 24 DEM are used in arcgis to extrac cross shore profile of the Sunset
-% Beach. The last 4 DEM data are considered as invalid and thus only 20 DEM
-% are used to plot
-
-% The code eliminate the data affected by wave height, and the maximum
-% foreshore elevation and foreshore beach slope are caculated in this code
+%{
+Code here is as same as TransectProfilePlot_v3 before the part "Find the 
+maximum beach elevation and calculate the beach slope"
+%}
 
 clear all; close all; clc
 

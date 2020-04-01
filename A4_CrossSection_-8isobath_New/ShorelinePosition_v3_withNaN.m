@@ -1,5 +1,7 @@
 %% Description
 %{
+NaN value considered in the plot.
+
 Here the accumulative distance value starts from -8m isobath. The profile 
 of each transects are plotted but the graphs are not modified, i.e., the
 wave affected offshore elevation data is not treated properly.
