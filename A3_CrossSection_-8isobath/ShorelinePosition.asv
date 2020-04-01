@@ -1,0 +1,154 @@
+%% Description
+
+%{
+Here the accumulative distance value starts from -8m isobath. The profile 
+of each transects are plotted but the graphs are not modified, i.e., the
+wave affected offshore elevation data is not treated properly.
+
+The shoreline positions at MSL and MHHW are calculated, i.e., find the
+distance at which the transect profiles reach MSL or MHHW
+%}
+
+clear all;close all;clc;
+
+%% Read File and Extract Data
+% Mean sea level and mean higher high water (Los Angeles Tide Gauge)
+NAVD = .063;
+MSL = .861 - NAVD;
+MHHW = 1.674 - NAVD;
+
+% Read CSV files
+data24 = csvread('LinePack1f_new_simp.csv',1,0);
+
+dataID = NaN(size(data24,1),1);
+dataTot = size(data24,1);
+dist_max = max(data24(:,1));
+xRange = ceil(dist_max/100)*100;
+dist = data24(:,1);
+elev = data24(:,2);
+
+% Replace -99 elevation with NaN
+for i = 1:dataTot
+    if data24(i,2) == -99
+        data24(i,2) = NaN;
+    end
+end
+
+% Separate data by original DEM datasets, there are 24 datasets, and for each 
+% dataset, there are multiple transect profile data
+k = 1;
+for i = 1:length(dataID)
+    if i > 1
+        if data24(i,3) == 0 && data24(i-1,3) == 24
+            k = k + 1;
+        end
+    end
+    dataID(i) = k;
+end
+data24_ext = [data24,dataID];
+
+% Count profile numbers
+profNum = length(find(data24(:,1)==0))/24;
+dataNum = 24;
+pixNum = zeros(profNum,dataNum);
+
+% Count the max number of data pairs for each transect, since on different
+% DEM, transect profile contains different numbers of data pairs
+% 
+profID = data24(:,3);
+for i = 1:dataTot
+    for j = 1:profNum
+        for k = 1:dataNum
+            if profID(i) == j-1 && dataID(i) == k
+                pixNum(j,k) = pixNum(j,k) + 1;
+            end
+        end
+    end
+end
+pixNum_max = max(max(pixNum));
+pixNum_sum = sum(sum(pixNum));  % consistency check
+
+%% Identify Shorelines and mean shoreline positions
+% Preallocate
+shorLin_MSL = zeros(profNum,dataNum);
+shorLin_MHHW = zeros(profNum,dataNum);
+
+elev_diff_MSL = elev - MSL;
+elev_diff_MHHW = elev - MHHW;
+
+startPix = 1;  % Starting index of a transect
+
+for j = 1:dataNum
+    for i = 1:profNum
+        endPix = startPix + pixNum(i,j)-1;  % Ending index of a transect
+        
+        % Plot 24*25 profiles
+        
+        %figure(i)
+        %subplot(4,6,j)
+        %plot(data24_ext(startPix:endPix,1),data24_ext(startPix:endPix,2))
+        %grid on
+        %xlim([0,xRange])
+        %ylim([-10,30])
+        %xlabel('Distance from isobath -8m (m)')
+        %ylabel('Elevation above NAVD88 (m)')
+        %xlabel('Dist')
+        %ylabel('Elev')
+        
+        % Calculate the MSL and MHHW distances
+        for k = startPix:endPix
+            % For each transect, the first pixel higher than MSL will be the shoreline point
+            if elev_diff_MSL(k) > 0
+                shorLin_MSL(i,j) = dist(k);
+                break
+            end
+        end
+        for k = startPix:endPix
+            % For each transect, the first pixel higher than MHHW will be the shoreline point
+            if elev_diff_MHHW(k) > 0
+                shorLin_MHHW(i,j) = dist(k);
+                break
+            end
+        end
+        
+        % Next transect
+        startPix = endPix + 1;
+        
+    end
+end
+
+dist_lon = zeros(profNum,1);   % Longshore distance, i.e. transects interval ~100m
+for i = 1:profNum
+    dist_lon(i) = 100*(i-1);
+end
+
+% Plot the shorelines for the 20 or 24 datasets
+for i = 1: dataNum-4
+    figure(26)
+    plot(dist_lon,shorLin_MSL(:,i)); hold on; grid on
+    xlabel('Longshore (m)')
+    ylabel('Distance from -8m isobath (m)')
+    title('Mean Sea Level Shorelines')
+    
+    figure(27)
+    plot(dist_lon,shorLin_MHHW(:,i)); hold on; grid on
+    xlabel('Longshore (m)')
+    ylabel('Distance from -8m isobath (m)')
+    title('Mean Higher High Water Shorelines')
+end
+
+%% 20 datasets averaged shorelines (excluding 2002 ifsur & tsunami & SLR & 2011Orange)
+shorLin_MSL_20 = shorLin_MSL(:,1:dataNum-4);
+shorLin_MHHW_20 = shorLin_MHHW(:,1:dataNum-4);
+
+shorLin_MSL_20mean = mean(shorLin_MSL_20,2);
+shorLin_MHHW_20mean = mean(shorLin_MHHW_20,2);
+
+figure(28)
+plot(dist_lon,shorLin_MSL_20mean); hold on
+plot(dist_lon,shorLin_MHHW_20mean)
+grid on
+legend('MSL Shoreline','MHHW Shoreline')
+xlabel('Longshore (m)')
+ylabel('Distance from -8m isobath (m)')
+title('Averaged Shorelines')
