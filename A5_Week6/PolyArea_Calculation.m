@@ -1,8 +1,10 @@
 %% Description
-% The code is for a CEE 199 assignment
 
-% A numerical method is used to calculate the Beach volume, which is
-% compared with the Surface Volume Tool in ArcGIS
+%{
+A numerical method is used to calculate the Beach volume, which is
+compared with the Surface Volume Tool in ArcGIS
+%}
+
 clear all; close all; clc
 
 %% Initialization
